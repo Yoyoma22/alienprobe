@@ -1,0 +1,15 @@
+#
+# Example logger that only outputs to the console on stdout.
+#
+[common]
+loggers = ['console']
+log_instance_id = true
+default_log_level='debug'
+
+[console]
+logger_class = 'alienlogger.loggers.ConsoleLogger'
+date_format = ''
+colorize_messagea = true
+message_format = 'date="[[DATE_FORMAT]]" level="[[LOG_LEVEL]]" message="[[LOG_MESSAGE_STATIC]]" [[LOG_TOKENS]] exception="\n[[EXCEPTION_TEXT]]"'
+
+

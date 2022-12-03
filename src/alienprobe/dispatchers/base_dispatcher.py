@@ -36,7 +36,12 @@ class BaseDispatcher(ABC):
         """
         Using the common tokens below, format the message according to the format runes.  Basically just does some
         string replaces on the message format of your choosing.
-
+        [[INSTANCE_ID]] This is a unique number created once per process (if you use the global
+        logger) or once per logger instance.  This is VERY useful when debugging clustered environments, as you can
+        do a where clause in the downstream system and see the log of the exact node that did the processing, ignoring
+        the rest.
+        [[MACHINE_NAME]] The name of the machine that this logger is running on, we get that from the host name.  So it's
+        never a bad idea to set the hostname of your docker image to something unique during the docker build or startup.
         [[DATE_STRING]]: The string date, formatted in the format passed into the message_format parameter.
         [[CLASS_NAME]]: The name of the class (or file) we are logging.
         [[LOG_MESSAGE_STATIC]]: The static part of the log, like 'Read input file'.  Things that never change go
@@ -88,6 +93,8 @@ class BaseDispatcher(ABC):
         msg = msg.replace('[[DATE_STRING]]', curtime_str)
         msg = msg.replace('[[LOG_LEVEL]]', message_object.level.name)
         msg = msg.replace('[[LOG_MESSAGE_STATIC]]', message_object.message_static)
+        msg = msg.replace('[[INSTANCE_ID]]', message_object.instance_id)
+        msg = msg.replace('[[MACHINE_NAME]]', message_object.machine_name)
 
         if not message_object.params:
             message_object.params = {}

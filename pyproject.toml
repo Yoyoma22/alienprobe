@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "alienprobe"
-version = "0.7.1"
+version = "0.1.1"
 description = "A logging library which allows for rapid logging development, debugging and analysis by downstream log analysis systems."
 authors = ["Andre Bonin <Yoyoma2@gmail.com>"]
 

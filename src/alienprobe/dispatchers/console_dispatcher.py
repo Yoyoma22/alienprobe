@@ -97,6 +97,7 @@ class ConsoleDispatcher(BaseDispatcher):
         self.datetime_format = config.get('datetime_format', 'YY%Y-%m-%d_%H:%M:%S.%f')
         self.log_utc_timezone = bool(config.get('log_utc_timezone', 'true'))
         self.message_format = config.get('message_format',
+                                         'machine_name="[[MACHINE_NAME]]"'
                                          'date="[[DATE_STRING]]" '
                                          'level="[[LOG_LEVEL]]" '
                                          'message="[[LOG_MESSAGE_STATIC]]" '

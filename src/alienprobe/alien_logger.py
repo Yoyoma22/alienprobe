@@ -1,7 +1,10 @@
 """
 A logging library which allows for rapid logging development, debugging and analysis by downstream log analysis systems.
 """
+import datetime
 import importlib
+import random
+import socket
 import threading
 import os
 from pathlib import Path
@@ -35,9 +38,15 @@ class AlienLogger:
     logger_config_path: Path
 
     """
-    Should we create an instance id for this log (process) and use it in the logging?
+    A unique code for each instance of the logger.  We usually get it from the host name and 
+    a unique alphanumeric code.
     """
-    log_instance_id: bool = False
+    instance_id: str = "UNKNOWN"
+
+    """
+    The current hostname for this machine.
+    """
+    machine_name: str = "Unknown"
 
     """
     Default log level, either 'debug', 'info', 'notice', 'error', 'critical'.
@@ -48,24 +57,22 @@ class AlienLogger:
         """
         Initialize the logging engine.
         """
-        self.log_instance_id = False
+        self.instance_id = self._generate_instance_id()
         config_file_str = os.getenv('ALIENLOGGER__CONFIG_FILE_PATH')
         if not config_file_str:
             raise ValueError("Could not find the 'ALIENLOGGER__CONFIG_FILE_PATH' environment variable, which is the "
                              "path to the TOML config file.")
+        self.machine_name = socket.gethostname()
+        self.instance_id = self._generate_instance_id()
 
         self.load_config(config_path=config_file_str)
+
+
 
     """
     We need a mutex so that we don't have two loggers cobbling over themselves, especially when using stuff like syslog.
     """
     _output_mutex: threading.Lock = None
-
-    """
-    Every logger isntance (which is global) has an instance id.  We can use these to track individual processes which 
-    generate the logs.  So if you want to know what one of your cluster nodes is doing, simply filter on the instance id.
-    """
-    instance_id = "UNKNOWN"
 
     def load_config(self, config_path: Union[Path, str]):
         """
@@ -84,17 +91,22 @@ class AlienLogger:
         with open(self.logger_config_path, "rb") as f:
             self.logger_config = tomli.load(f)
 
-        self.log_instance_id = self.logger_config.get('log_instance_id', True)
         self.default_log_level = LogLevels().get_level_by_name(self.logger_config.get('default_log_level', 'info'))
 
         self._init_dispatchers()
+
+        self.info(self, "Logger Initialized", {
+            "machine_name": self.machine_name,
+            "start_time": datetime.datetime.now(),
+            "utc_start_time": datetime.datetime.utcnow()
+        })
 
     def _init_dispatchers(self):
         """
         Go through the list of dispatchers configured in the config file, and instantiate them all.
         This sets up the current array of dispatchers that is used to broadcast messages.
         """
-        self.dispatchers = []
+        self.dispatchers = {}
 
         dispatchers = self.logger_config['common']['dispatchers']
         for dispatcher_name in dispatchers:
@@ -150,11 +162,22 @@ class AlienLogger:
         msg_obj.message_static = log_message_static
         msg_obj.params = log_params
         msg_obj.ex = exception
+        msg_obj.instance_id = self.instance_id
+        msg_obj.machine_name = self.machine_name
 
         for disp in self.dispatchers.values():
             disp: BaseDispatcher
             disp.write_message(message_object=msg_obj)
 
+    def _generate_instance_id(self) -> str:
+        """
+        Generates a unique instance id for each instantiation of the logger.
+        @return A unique instance id which includes the logger start and date time.  That is useful for debugging
+        multiple nodes in a cluster when you bring them online.
+        """
+        cur_date = datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%SZ')
+        instance_id = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
+        return cur_date + "_" + instance_id
 
     def trace(self, log_source: Union[str, object], log_message_static: str, log_params: dict = None,
               exception: Optional[BaseException] = None) -> None:

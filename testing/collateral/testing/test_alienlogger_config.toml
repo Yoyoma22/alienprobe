@@ -5,16 +5,10 @@
 # The list of dispatchers to instantiate, we use this list of strings to find the various sections in this file.
 dispatchers = ['console']
 
-# Should we log the logger's instance id?  This is a unique number created once per process (if you use the global
-# logger) or once per logger instance.  This is VERY useful when debugging clustered environments, as you can
-# do a where clause in the downstream system and see the log of the exact node that did the processing, ignoring
-# the rest.
-log_instance_id = true
-
-
 [log_levels]
 # The default log level for all the loggers.  This is for any object name.
 default_log_level='debug'
+
 # Here, you can put module and package names and set the log level for a given module.  In a future version,
 # these are reloaded every minute.  If this file has changed, a new logging level will be applied.  This means
 # that you can "hot-change" the logging level of a given module at any time, without restarting the app.
@@ -41,6 +35,12 @@ datetime_format = '%Y-%m-%d_%H:%M:%S.%f'
 log_utc_timezone = true
 
 # Here you can set the exact format of your message
+# [[INSTANCE_ID]] This is a unique number created once per process (if you use the global
+# logger) or once per logger instance.  This is VERY useful when debugging clustered environments, as you can
+# do a where clause in the downstream system and see the log of the exact node that did the processing, ignoring
+# the rest.
+# [[MACHINE_NAME]] The name of the machine that this logger is running on, we get that from the host name.  So it's
+# never a bad idea to set the hostname of your docker image to something unique during the docker build or startup.
 # [[DATE_FORMAT]] The date string, in the format defined above.
 # [[CLASS_NAME]] The class name (or __file__) of the item that outputted this message.
 # [[LOG_MESSAGE_STATIC]] The static part of the log, like 'Read input file'.  Things that never change go in here.
@@ -49,7 +49,7 @@ log_utc_timezone = true
 # details (not in LOG_MESSAGE_STATIC).  For our 'Read Input File', we can add {'path': file_path, 'client': client_name, 'file_size': file_size}
 # With this, you can actually make a query (or graph!) in a downstream system of how many times a client sent a file and sum up how much
 # data is being processed from this client per day.
-message_format = 'date="[[DATE_STRING]]" level="[[LOG_LEVEL]]" class="[[CLASS_NAME]]" message="[[LOG_MESSAGE_STATIC]]" [[LOG_PARAMS]]'
+message_format = 'machine_name="[[MACHINE_NAME]]" instance="[[INSTANCE_ID]]" date="[[DATE_STRING]]" level="[[LOG_LEVEL]]" class="[[CLASS_NAME]]" message="[[LOG_MESSAGE_STATIC]]" [[LOG_PARAMS]]'
 
 # If an exception was passed, we append this exception_format to the message_format, replacing the stack trace with
 # [[EXCEPTION_TEXT]].  For our example, we simply add the stack trace, and we break down a line as well.

@@ -16,6 +16,8 @@ class Message:
     message_static: str = None
     params: dict = {}
     ex: BaseException = None
+    instance_id: str
+    machine_name: str
 
     def __str__(self):
         """

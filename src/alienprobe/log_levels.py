@@ -41,6 +41,11 @@ class LogLevel:
         """
         return f"{self.name}({self.level_id})"
 
+    def __hash__(self):
+        """
+        Generates a hash code for this object.
+        """
+        return hash((self.name, self.level_id))
 
 class LogLevels:
     """
@@ -57,36 +62,36 @@ class LogLevels:
     process.  For example, if we are trying to debug a small part of the system, logging every operation, then
     we can use the 'trace' level.  NOTE: This level does affect performance.  Use sparingly.
     """
-    TRACE = LogLevel('trace', 0)
+    TRACE = LogLevel('TRACE', 0)
 
     """
     The debug level is a bit less than the "trace" level.  We usually use these for information that developers 
     need to know whilst debugging, but not to the level of TRACE.  For example, "Input file read", {"bytes": bytes_read}
     NOTE:  Putting too many debug statements can slow down your code. 
     """
-    DEBUG = LogLevel('debug', 1)
+    DEBUG = LogLevel('DEBUG', 1)
 
     """
     This must be the most common of the levels.  We uses the Info levels when we want to let the readers know that
     something occurred in the system.  Its not an error, but it is usually an event.  
     An example could be "Processed Uploaded File", {"client": client_name, "elapsed_time": elapsed_time}"
     """
-    INFO = LogLevel('info', 2)
+    INFO = LogLevel('INFO', 2)
 
     """
     This level is a bit odd, in the sense that it's an INFO that you want to highlight, its more important than 
     a normal INFO log, but it's not a WARNING since it wasn't necessarily a recoverable error. 
     An example of this would be a notice like "Loaded a new item from the config file", {"item_name": item_name}
     """
-    NOTICE = LogLevel('notice', 3)
+    NOTICE = LogLevel('NOTICE', 3)
 
     """
     The WARNING level (sometimes called WARN), signifies a recoverable error.  An error of something that happened,
     but the execution can continue.  An example of this could be "Cannot connect to URL! Retrying..."
     {"url": url_to_connect, "retries": retry_count}
     """
-    WARNING = LogLevel('warning', 4)
-    WARN = LogLevel('warning', 4)
+    WARNING = LogLevel('WARNING', 4)
+    WARN = LogLevel('WARNING', 4)
 
     """
     The ERROR level signifies a non-recoverable error in execution.  This usually stops the execution from occurring, 
@@ -94,7 +99,7 @@ class LogLevels:
     "Cannot connect to URL, retry count exceeded!  Cannot continue", {"url": url_to_connect, "retries": retry_count}
     Consider passing an exception for this error level.
     """
-    ERROR = LogLevel('error', 5)
+    ERROR = LogLevel('ERROR', 5)
 
     """
     The CRITICAL level indicates something that is more severe than an average error.  
@@ -105,7 +110,7 @@ class LogLevels:
     "drive_used_pcnt": drive_used/drive_size}
     Consider passing an exception for this error level.
     """
-    CRITICAL = LogLevel('critical', 6)
+    CRITICAL = LogLevel('CRITICAL', 6)
 
     """
     This is the level that you never want to see in production.  The FATAL level means the system has stopped, 
@@ -113,35 +118,35 @@ class LogLevels:
     UpSchitsCreekWithoutAPaddleException.  Basically, the system has stopped executing or has entered an 
     incoherent or corrupted state.  
     """
-    FATAL = LogLevel('fatal', 7)
+    FATAL = LogLevel('FATAL', 7)
 
     """
     A map of integer values to log levels.
     """
     log_levels_by_id = {
-        0: LogLevel('trace', 0),
-        1: LogLevel('debug', 1),
-        2: LogLevel('info', 2),
-        3: LogLevel('notice', 3),
-        4: LogLevel('warn', 4),
-        5: LogLevel('error', 5),
-        6: LogLevel('critical', 6),
-        7: LogLevel('fatal', 7),
+        0: LogLevel('TRACE', 0),
+        1: LogLevel('DEBUG', 1),
+        2: LogLevel('INFO', 2),
+        3: LogLevel('NOTICE', 3),
+        4: LogLevel('WARN', 4),
+        5: LogLevel('ERROR', 5),
+        6: LogLevel('CRITICAL', 6),
+        7: LogLevel('FATAL', 7),
     }
 
     """
     A map of uppercase log levels like 'error'
     """
     log_levels_by_name = {
-        'trace': LogLevel('trace', 0),
-        'debug': LogLevel('debug', 1),
-        'info': LogLevel('info', 2),
-        'notice': LogLevel('notice', 3),
-        'warning': LogLevel('warning', 4),
-        'warn': LogLevel('warn', 4),
-        'error': LogLevel('error', 5),
-        'critical': LogLevel('critical', 6),
-        'fatal': LogLevel('fatal', 7),
+        'TRACE': LogLevel('TRACE', 0),
+        'DEBUG': LogLevel('DEBUG', 1),
+        'INFO': LogLevel('INFO', 2),
+        'NOTICE': LogLevel('NOTICE', 3),
+        'WARNING': LogLevel('WARNING', 4),
+        'WARN': LogLevel('WARNING', 4),
+        'ERROR': LogLevel('ERROR', 5),
+        'CRITICAL': LogLevel('CRITICAL', 6),
+        'FATAL': LogLevel('FATAL', 7),
     }
 
     def get_level_by_name(self, str_name: str) -> Optional[LogLevel]:
@@ -154,7 +159,7 @@ class LogLevels:
         if not str_name:
             return None
 
-        str_name = str_name.strip().lower()
+        str_name = str_name.strip().upper()
         for key_str in self.log_levels_by_name.keys():
             if str_name in key_str:
                 return self.log_levels_by_name[str_name]

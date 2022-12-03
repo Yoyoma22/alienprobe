@@ -1,6 +1,7 @@
 """
 A logging library which allows for rapid logging development, debugging and analysis by downstream log analysis systems.
 """
+import importlib
 import threading
 import os
 from pathlib import Path
@@ -10,6 +11,7 @@ import tomli
 
 from alienprobe.dispatchers.base_dispatcher import BaseDispatcher
 from alienprobe.log_levels import LogLevels, LogLevel
+from alienprobe.message import Message
 
 
 class AlienLogger:
@@ -26,6 +28,11 @@ class AlienLogger:
     The complete configuration for this logger, loaded from the TOML file.
     """
     logger_config: dict
+
+    """
+    The path that we loaded the config from.
+    """
+    logger_config_path: Path
 
     """
     Should we create an instance id for this log (process) and use it in the logging?
@@ -66,15 +73,15 @@ class AlienLogger:
         path is not found.
         :param config_path: The path to the toml config file for this logger.
         """
-        path_config = Path(config_path)
-        if not path_config.exists():
-            raise ValueError(f"Could not find Logger TOML config file in {config_path}")
+        self.logger_config_path = Path(config_path)
+        if not self.logger_config_path.exists():
+            raise ValueError(f"Could not find Logger TOML config file in {self.logger_config_path}")
 
         #
         # We use 'rb' with no encoding, in case that other encodings are used for the config file.  Apparently,
         # tomli is able to handle this.  I hope its not just utf-8 or ascii.
         #
-        with open(path_config, "rb") as f:
+        with open(self.logger_config_path, "rb") as f:
             self.logger_config = tomli.load(f)
 
         self.log_instance_id = self.logger_config.get('log_instance_id', True)
@@ -88,6 +95,29 @@ class AlienLogger:
         This sets up the current array of dispatchers that is used to broadcast messages.
         """
         self.dispatchers = []
+
+        dispatchers = self.logger_config['common']['dispatchers']
+        for dispatcher_name in dispatchers:
+            if dispatcher_name not in self.logger_config.keys():
+                raise ValueError(f"Could not find dispatcher {dispatcher_name} configuration "
+                                 f"in config file {self.logger_config_path}")
+
+            dispatcher_config = self.logger_config[dispatcher_name]
+            #
+            # For each logger that is configured, instantiate the logger.
+            # You can write your own!
+            #
+            dispatcher_cls_name = dispatcher_config.get('dispatcher_class_name')
+            if not dispatcher_cls_name:
+                raise ValueError(f'Dispatcher {dispatcher_name} does not have a class name entry in config '
+                                 f'(dispatcher_class_name)")')
+
+            module_name, class_name = dispatcher_cls_name.rsplit(".", 1)
+            MyDispatcher = getattr(importlib.import_module(module_name), class_name)
+            dispatcher_instance = MyDispatcher()
+            self.dispatchers.append(dispatcher_instance)
+            dispatcher_instance: BaseDispatcher
+            dispatcher_instance.config_dispatcher(config=dispatcher_config)
 
     def log_internal(self, log_level: LogLevel, log_source: Union[str, object], log_message_static: str,
                      log_params: dict = None, exception: Optional[BaseException] = None) -> None:
@@ -110,7 +140,17 @@ class AlienLogger:
         and outputted as part of the message.
         :return: None
         """
-        print("FOO!")
+        msg_obj = Message()
+        msg_obj.level = log_level
+        msg_obj.class_name = log_source
+        msg_obj.message_static = log_message_static
+        msg_obj.params = log_params
+        msg_obj.ex = exception
+
+        for disp in self.dispatchers:
+            disp: BaseDispatcher
+            disp.write_message(message_object=msg_obj)
+
 
     def trace(self, log_source: Union[str, object], log_message_static: str, log_params: dict = None,
               exception: Optional[BaseException] = None) -> None:

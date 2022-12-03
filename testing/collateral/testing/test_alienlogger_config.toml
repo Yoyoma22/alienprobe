@@ -23,31 +23,33 @@ default_log_level='debug'
 # myapp.mymodule.foomodule = debug
 
 [console]
-# The path to the dispatcher for console output.
-logger_class = 'alienlogger.dispatchers.ConsoleLogger'
+# The path to the dispatcher for console output. You can write your own!  Just make sure it extends BaseDispatcher,
+# since we only call these types of objects.
+dispatcher_class_name = 'alienprobe.dispatchers.console_dispatcher.ConsoleDispatcher'
+
+# When we are outputting to console, should we use ASCII colorization for warning, debug, etc. It is very convenient,
+# especially whilst developer, to highlight different logging levels as different colors.
+colorize_messages = true
 
 # What is the date and time format we should use in the logging.  You can use the ISO format such as
 # YYYY-MM-DDTHH_MM_SS or any other format you wish.  Different systems have differnt date formats.
-datetime_format = 'YYYY-MM-DD_HH:mm:SS'
+datetime_format = '%Y-%m-%d_%H:%M:%S.%f'
 
 # When we log, should we be using UTC time zone? Or do we take the local machine's time zone.
 # After many bloody battles, and many deaths, I always logging in UTC, especially if you have an international
 # user base.
 log_utc_timezone = true
 
-# When we are outputting to console, should we use ASCII colorization for warning, debug, etc. It is very convenient,
-# especially whilst developer, to highlight different logging levels as differnt colors.
-colorize_messagea = true
-
 # Here you can set the exact format of your message
 # [[DATE_FORMAT]] The date string, in the format defined above.
+# [[CLASS_NAME]] The class name (or __file__) of the item that outputted this message.
 # [[LOG_MESSAGE_STATIC]] The static part of the log, like 'Read input file'.  Things that never change go in here.
 # It is basically an "alert", so in your downstream system, you can group all the events by 'Read input file'.
 # [[LOG_PARAMS]] The framework takes a dictionary of log parameters to add.  This is where you add your variable
 # details (not in LOG_MESSAGE_STATIC).  For our 'Read Input File', we can add {'path': file_path, 'client': client_name, 'file_size': file_size}
 # With this, you can actually make a query (or graph!) in a downstream system of how many times a client sent a file and sum up how much
 # data is being processed from this client per day.
-message_format = 'date="[[DATE_FORMAT]]" level="[[LOG_LEVEL]]" message="[[LOG_MESSAGE_STATIC]]" [[LOG_PARAMS]]'
+message_format = 'date="[[DATE_STRING]]" level="[[LOG_LEVEL]]" class="[[CLASS_NAME]]" message="[[LOG_MESSAGE_STATIC]]" [[LOG_PARAMS]]'
 
 # If an exception was passed, we append this exception_format to the message_format, replacing the stack trace with
 # [[EXCEPTION_TEXT]].  For our example, we simply add the stack trace, and we break down a line as well.

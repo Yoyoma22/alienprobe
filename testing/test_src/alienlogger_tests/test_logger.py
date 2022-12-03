@@ -25,12 +25,13 @@ def test_logging_levels(test_context: TestContext):
     """
     logger = AlienLogger()
     assert logger, "Should have had a correct instantiation."
+    print()
     logger.default_log_level = LogLevels.TRACE
-    logger.trace(__name__, 'Message at TRACE Level', {'config_path': test_context.log_config_path})
-    logger.debug(__name__, 'Message at DEBUG Level', {'config_path': test_context.log_config_path})
-    logger.info(__name__, 'Message at INFO Level', {'config_path': test_context.log_config_path})
-    logger.warn(__name__, 'Message at WARN Level', {'config_path': test_context.log_config_path})
-    logger.error(__name__, 'Message at ERROR Level', {'config_path': test_context.log_config_path})
-    logger.critical(__name__, 'Message at CRITICAL Level', {'config_path': test_context.log_config_path})
-    logger.fatal(__name__, 'Message at FATAL Level', {'config_path': test_context.log_config_path})
+    logger.trace(__name__, 'Message at TRACE Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.debug(__name__, 'Message at DEBUG Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.info(__name__, 'Message at INFO Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.warn(__name__, 'Message at WARN Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.error(__name__, 'Message at ERROR Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.critical(__name__, 'Message at CRITICAL Level', {'config_path': test_context.log_config_path, "foo": "bar"})
+    logger.fatal(__name__, 'Message at FATAL Level', {'config_path': test_context.log_config_path, "foo": "bar"})
 

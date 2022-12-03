@@ -20,9 +20,9 @@ class AlienLogger:
     """
 
     """
-    The list of dispatchers to dispatch the messages (in an asynch way)
-    """
-    dispatchers: list[BaseDispatcher] = []
+    The dict of dispatcher names to dispatcher instances, which is used to send out messages.
+     """
+    dispatchers: dict = {}
 
     """
     The complete configuration for this logger, loaded from the TOML file.
@@ -115,7 +115,7 @@ class AlienLogger:
             module_name, class_name = dispatcher_cls_name.rsplit(".", 1)
             MyDispatcher = getattr(importlib.import_module(module_name), class_name)
             dispatcher_instance = MyDispatcher()
-            self.dispatchers.append(dispatcher_instance)
+            self.dispatchers[dispatcher_name] = dispatcher_instance
             dispatcher_instance: BaseDispatcher
             dispatcher_instance.config_dispatcher(config=dispatcher_config)
 
@@ -140,6 +140,10 @@ class AlienLogger:
         and outputted as part of the message.
         :return: None
         """
+        if log_params and not isinstance(log_params, dict):
+            raise ValueError(f"Message log params for message '{log_message_static} in class "
+                             f"{log_source} is not a dictionary!  Pass in a dictionary or None.")
+
         msg_obj = Message()
         msg_obj.level = log_level
         msg_obj.class_name = log_source
@@ -147,7 +151,7 @@ class AlienLogger:
         msg_obj.params = log_params
         msg_obj.ex = exception
 
-        for disp in self.dispatchers:
+        for disp in self.dispatchers.values():
             disp: BaseDispatcher
             disp.write_message(message_object=msg_obj)
 
